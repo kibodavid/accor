@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeMap | Accor Excellence</title>
+    <style>
+        :root {
+            --accor-gold: #c29b40; 
+            --accor-navy: #001b3a;
+            --glass: rgba(255, 255, 255, 0.07);
+            --border: rgba(194, 155, 64, 0.4);
+        }
+        body {
+            font-family: 'Playfair Display', serif;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #001b3a 0%, #000a16 100%);
+            color: #f8fafc;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #app-container {
+            width: 92%;
+            max-width: 420px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            padding: 35px;
+            border-radius: 30px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+            text-align: center;
+        }
+        .brand-sub { font-size: 0.75rem; color: var(--accor-gold); letter-spacing: 4px; margin-bottom: 8px; text-transform: uppercase; font-weight: 800; }
+        .timer { font-size: 1.8rem; font-weight: 800; color: var(--accor-gold); margin-bottom: 15px; font-variant-numeric: tabular-nums; }
+        
+        .progress-wrapper { margin-bottom: 30px; }
+        .progress-track { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+        #progress-bar { height: 100%; background: var(--accor-gold); width: 0%; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .question-box { font-size: 1.15rem; font-weight: 600; margin-bottom: 25px; min-height: 100px; display: flex; align-items: center; justify-content: center; line-height: 1.5; color: #fff;}
+        .options-grid { display: grid; gap: 12px; }
+        .opt { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(194, 155, 64, 0.2); color: #e2e8f0; padding: 16px; border-radius: 15px; cursor: pointer; transition: 0.3s; text-align: left; font-size: 0.95rem; }
+        .opt:hover { border-color: var(--accor-gold); background: rgba(194, 155, 64, 0.15); transform: translateY(-2px); }
+        .correct { background: #166534 !important; border-color: #22c55e !important; color: white !important;}
+        .wrong { background: #991b1b !important; border-color: #ef4444 !important; color: white !important;}
+        
+        .overlay { display: none; position: absolute; inset: 0; background: var(--accor-navy); z-index: 100; flex-direction: column; justify-content: center; align-items: center; border-radius: 30px; padding: 40px; }
+        .btn-action { background: var(--accor-gold); color: #fff; border: none; padding: 18px 45px; border-radius: 50px; font-weight: 800; cursor: pointer; margin-top: 25px; text-decoration: none; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
+        .btn-action:hover { filter: brightness(1.2); box-shadow: 0 10px 20px rgba(194, 155, 64, 0.3); }
+        
+        h1 { color: #fff; margin: 0; font-size: 2.4rem; letter-spacing: -1px; }
+        p { color: #94a3b8; line-height: 1.7; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <div id="start-screen" class="overlay" style="display: flex;">
+        <div class="brand-sub">Live Limitless</div>
+        <h1>SafeMap</h1>
+        <p>Welcome, Heartist. Test your mastery of Accor excellence, brand heritage, and our uncompromising safety standards.</p>
+        <button class="btn-action" onclick="begin()">Enter Challenge</button>
+    </div>
+
+    <div id="milestone-screen" class="overlay">
+        <h1>Excellence Milestone</h1>
+        <p>You have demonstrated superior knowledge of the Accor portfolio. Keep the momentum going.</p>
+        <button class="btn-action" onclick="resume()">Proceed</button>
+    </div>
+
+    <div id="result-screen" class="overlay">
+        <h1>Heartist Elite</h1>
+        <p id="final-score" style="font-size: 1.6rem; color: var(--accor-gold); margin: 15px 0; font-weight: 800;"></p>
+        <p>You are a true guardian of the Accor hospitality spirit.</p>
+        <button class="btn-action" onclick="location.reload()">Restart Journey</button>
+    </div>
+
+    <div class="timer" id="timer">30</div>
+    
+    <div class="progress-wrapper">
+        <div class="progress-track"><div id="progress-bar"></div></div>
+    </div>
+
+    <div class="question-box" id="q-text">Loading...</div>
+    <div class="options-grid" id="o-grid"></div>
+</div>
+
+<script>
+    const questions = [
+        { q: "What is the core philosophy that defines every Accor team member?", a: ["Customer First", "Heartist", "Efficiency Expert", "Service Provider"], c: 1 },
+        { q: "Accor's global loyalty program, allowing guests to 'Live Limitless', is known as:", a: ["Accor Rewards", "ALL - Accor Live Limitless", "Premier Club", "Heartist Points"], c: 1 },
+        { q: "Which Accor brand is known as the pioneer of the 'luxury' segment since 1887?", a: ["Sofitel", "Raffles", "Pullman", "Novotel"], c: 1 },
+        { q: "What is the first priority for any Heartist during a fire alarm in the hotel?", a: ["Save the inventory", "Ensure guest safety and follow evacuation routes", "Call the manager", "Secure personal belongings"], c: 1 },
+        { q: "Which brand represents Accor's 'Modern Easy Living' with over 500 hotels worldwide?", a: ["Fairmont", "Novotel", "Banyan Tree", "Movenpick"], c: 1 },
+        { q: "Accor's commitment to the environment and sustainable hospitality is led by which initiative?", a: ["Green Key", "Planet 21 / Acting Here", "Accor Nature", "Eco-Stay"], c: 1 },
+        { q: "What should be done if a guest is found in a medical emergency in a lobby area?", a: ["Move the guest", "Wait for family", "Call the internal emergency response and 999", "Consult a colleague first"], c: 2 },
+        { q: "Which ultra-luxury Accor brand focuses on 'Wild Luxury' and sustainability?", a: ["ibis", "Banyan Tree", "Swissotel", "Mercure"], c: 1 },
+        { q: "In the Accor safety hierarchy, what does 'ALL SAFE' represent?", a: ["A fire exit label", "Global cleanliness and prevention standards", "A luggage storage area", "The staff cafeteria"], c: 1 },
+        { q: "Who were the visionary founders of Accor in 1967?", a: ["Steve Jobs & Wozniak", "Paul Dubrule & Gérard Pélisson", "The Hilton Brothers", "Bernard Arnault"], c: 1 },
+        { q: "Which Accor brand is celebrated for its 'Swiss' heritage and focus on well-being?", a: ["Swissotel", "Pullman", "Sofitel", "Adagio"], c: 0 },
+        { q: "If a Heartist spots a suspicious, unattended package in the corridor, they must:", a: ["Open it to check", "Ignore it if it's small", "Report to Security immediately without touching it", "Move it to the back office"], c: 2 },
+        { q: "Which Accor brand is synonymous with French 'Art de Vivre' and luxury?", a: ["Sofitel", "ibis Budget", "Mama Shelter", "Mantra"], c: 0 },
+        { q: "The safety procedure for handling 'Chemical Spills' in the back-of-house is found in:", a: ["The Menu", "SDS (Safety Data Sheets)", "The Guest Directory", "Personal Notebook"], c: 1 },
+        { q: "Which lifestyle brand under Accor is known for its quirky, design-led 'Mama' spirit?", a: ["Mama Shelter", "Rixos", "Fairmont", "Angsana"], c: 0 },
+        { q: "What is the golden rule for elevator safety during a fire emergency?", a: ["Use the service lift", "Only for VIPs", "Never use elevators; use designated fire stairs", "Use only if empty"], c: 2 },
+        { q: "Which Accor brand specializes in premium chocolate-related culinary experiences?", a: ["Movenpick", "Pullman", "Novotel", "Mercure"], c: 0 },
+        { q: "Accor's 'Heartist' spirit encourages which type of guest interaction?", a: ["Scripted and formal", "Spontaneous, authentic and from the heart", "Strictly professional", "Transaction-focused"], c: 1 },
+        { q: "What is the primary goal of the 'Heart of House' safety audits?", a: ["To find faults in people", "To ensure a safe environment for both Heartists and Guests", "To save electricity", "To check uniform cleanliness"], c: 1 },
+        { q: "How often should an Accor Heartist refresh their knowledge of safety and brand standards?", a: ["Every 5 years", "Once during onboarding", "As often as possible to ensure excellence", "Never"], c: 2 }
+    ];
+
+    let current = 0, score = 0, clock, time = 30, milestoneReached = false;
+
+    function begin() { document.getElementById('start-screen').style.display = 'none'; loadQ(); }
+
+    function loadQ() {
+        if (current === 10 && !milestoneReached) { showMilestone(); return; }
+        startClock();
+        const data = questions[current]; 
+        document.getElementById('q-text').innerText = data.q;
+        const grid = document.getElementById('o-grid');
+        grid.innerHTML = '';
+        data.a.forEach((opt, i) => {
+            const b = document.createElement('button');
+            b.className = 'opt';
+            b.innerText = opt;
+            b.onclick = () => verify(i, b);
+            grid.appendChild(b);
+        });
+        updateProgress();
+    }
+
+    function updateProgress() {
+        document.getElementById('progress-bar').style.width = (current / 20) * 100 + '%';
+    }
+
+    function startClock() {
+        clearInterval(clock);
+        time = 30;
+        document.getElementById('timer').innerText = time;
+        clock = setInterval(() => {
+            time--;
+            document.getElementById('timer').innerText = time;
+            if (time <= 0) verify(-1);
+        }, 1000);
+    }
+
+    function verify(choice, btn) {
+        clearInterval(clock);
+        const correct = questions[current].c;
+        const all = document.querySelectorAll('.opt');
+        all.forEach(b => b.disabled = true);
+        if (choice === correct) { if(btn) btn.classList.add('correct'); score++; } 
+        else { if (btn) btn.classList.add('wrong'); all[correct].classList.add('correct'); }
+        setTimeout(() => { 
+            current++; 
+            if (current < 20) { loadQ(); } 
+            else { finish(); }
+        }, 1200);
+    }
+
+    function showMilestone() {
+        milestoneReached = true;
+        document.getElementById('milestone-screen').style.display = 'flex';
+    }
+
+    function resume() { 
+        document.getElementById('milestone-screen').style.display = 'none'; 
+        loadQ(); 
+    }
+
+    function finish() {
+        updateProgress();
+        document.getElementById('result-screen').style.display = 'flex';
+        document.getElementById('final-score').innerText = `Excellence Rating: ${score} / 20`;
+    }
+</script>
+</body>
+</html>
